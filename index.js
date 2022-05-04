@@ -3,15 +3,16 @@ const axios = require("axios");
 const express = require("express");
 const cors = require("cors");
 const queryString = require("querystring");
-
+const path = require('path')
 const app = express();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8888;
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
+const FRONTEND_URI = process.env.FRONTEND_URI;
 
-console.log(REDIRECT_URI);
+app.use(express.static(path.resolve(__dirname, './client/build')))
 
 app.use(express.json());
 app.use(cors());
@@ -81,7 +82,7 @@ app.get("/callback", async (req, res) => {
         expires_in,
         refresh_token
       });
-      res.redirect(`http://localhost:3000/?${queryParams}`)
+      res.redirect(`${FRONTEND_URI}/?${queryParams}`)
     } else {
       res.redirect(`/?${queryString.stringify({ error: 'invalid_token' })}`)
     }
@@ -109,6 +110,10 @@ app.get('/refresh_token', async (req, res) => {
   } catch (error) {
     res.send(error);
   }
+})
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, './client/build', 'index.html'))
 })
 
 app.listen(PORT, () =>
